@@ -1,0 +1,53 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", // Updated for better async/await support
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "forceConsistentCasingInFileNames": true, // Prevents case-sensitive file errors
+    "noImplicitReturns": true, // Ensures all functions return a value
+    "noUnusedLocals": true, // Catches unused local variables
+    "noUnusedParameters": true, // Catches unused function parameters
+    "noFallthroughCasesInSwitch": true, // Prevents unintentional fallthrough in switch
+    "typeRoots": [
+      "src/types",
+      "node_modules/@types"
+    ], // Custom types support
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    "src/types",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
