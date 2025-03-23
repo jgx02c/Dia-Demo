@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Socket } from 'socket.io-client';
+import React, { useState, useEffect } from 'react';
+import { transcriptionWebSocket } from '@/api/transcription_websocket';
 
 interface Speaker {
   id: string;
@@ -14,12 +14,12 @@ interface Sentence {
 }
 
 interface TranscriptionBoxProps {
-  socket: Socket | null;
   audioDevices: MediaDeviceInfo[];
   selectedDeviceId: string;
   onDeviceSelect: (deviceId: string) => void;
   onStartTranscription: () => void;
   onStopTranscription: () => void;
+  isStreaming: boolean;
 }
 
 const speakerColors: { [key: string]: string } = {
@@ -29,14 +29,13 @@ const speakerColors: { [key: string]: string } = {
 };
 
 export default function TranscriptionBox({
-  socket,
   audioDevices,
   selectedDeviceId,
   onDeviceSelect,
   onStartTranscription,
   onStopTranscription,
+  isStreaming,
 }: TranscriptionBoxProps) {
-  const [isTranscribing, setIsTranscribing] = useState(false);
   const [speakers, setSpeakers] = useState<Speaker[]>([
     { id: '1', name: 'John Smith', color: '#5865f2' },
     { id: '2', name: 'Sarah Johnson', color: '#3ba55c' },
@@ -48,41 +47,40 @@ export default function TranscriptionBox({
   const [buffer, setBuffer] = useState("");
   const [connectionStatus, setConnectionStatus] = useState("Ready");
 
-  React.useEffect(() => {
-    if (!socket) return;
-
-    socket.on("transcription_buffer", (data: { buffer: string }) => {
-      console.log("Received buffer:", data.buffer);
-      setBuffer(data.buffer);
+  useEffect(() => {
+    // Set up WebSocket handlers
+    transcriptionWebSocket.setStatusChangeHandler(setConnectionStatus);
+    transcriptionWebSocket.setTranscriptionDataHandler((data) => {
+      //console.log("TranscriptionBox received final transcription:", data);
+      setTranscriptions(prev => [...prev, { text: data.text }]);
     });
-
-    socket.on("clear_buffer", () => {
+    transcriptionWebSocket.setBufferUpdateHandler((text) => {
+      //console.log("TranscriptionBox received buffer update:", text);
+      setBuffer(text);
+    });
+    transcriptionWebSocket.setBufferClearHandler(() => {
+      //console.log("TranscriptionBox buffer cleared");
       setBuffer('');
     });
 
-    socket.on("transcription_data", (data: { text: string, speaker?: string }) => {
-      console.log("Received transcription data:", data);
-      setTranscriptions(prev => [...prev, { text: data.text, speaker: data.speaker }]);
-    });
+    // Connect to WebSocket
+    transcriptionWebSocket.connect();
 
     return () => {
-      socket.off("transcription_buffer");
-      socket.off("clear_buffer");
-      socket.off("transcription_data");
+      transcriptionWebSocket.disconnect();
     };
-  }, [socket]);
+  }, []);
+
+  // Update connectionStatus when isStreaming changes
+  useEffect(() => {
+    setConnectionStatus(isStreaming ? "Recording" : "Ready");
+  }, [isStreaming]);
 
   const handleStartTranscription = () => {
-    if (!socket) return;
-    setIsTranscribing(true);
-    setConnectionStatus("Recording");
     onStartTranscription();
   };
 
   const handleStopTranscription = () => {
-    if (!socket) return;
-    setIsTranscribing(false);
-    setConnectionStatus("Ready");
     onStopTranscription();
   };
 
@@ -139,7 +137,7 @@ export default function TranscriptionBox({
               </svg>
             </button>
             <span className={`px-2 py-1 rounded text-xs flex items-center gap-2 ${
-              isTranscribing 
+              isStreaming 
                 ? 'bg-green-500/10 text-green-400'
                 : 'bg-[#4f545c] text-[#b9bbbe]'
             }`}>
@@ -156,15 +154,15 @@ export default function TranscriptionBox({
             </span>
           </div>
           <button
-            onClick={isTranscribing ? handleStopTranscription : handleStartTranscription}
+            onClick={isStreaming ? handleStopTranscription : handleStartTranscription}
             className={`p-1.5 rounded flex items-center space-x-2 text-sm ${
-              isTranscribing 
+              isStreaming 
                 ? 'bg-red-500 hover:bg-red-600 text-white' 
                 : 'bg-[#5865f2] hover:bg-[#4752c4] text-white'
             } transition-colors`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {isTranscribing ? (
+              {isStreaming ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z M10 9v6m4-6v6" />
               ) : (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />

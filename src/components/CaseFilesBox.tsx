@@ -15,21 +15,19 @@ interface Bookmark {
   fileId: string;
 }
 
-interface CaseFilesBoxProps {
-  files: CaseFile[];
-  bookmarks: Bookmark[];
-  onFileSelect: (file: CaseFile) => void;
-  onBookmarkSelect: (bookmark: Bookmark) => void;
-}
-
-export default function CaseFilesBox({
-  files,
-  bookmarks,
-  onFileSelect,
-  onBookmarkSelect,
-}: CaseFilesBoxProps) {
+export default function CaseFilesBox() {
   const [activeTab, setActiveTab] = useState<'files' | 'bookmarks' | 'script'>('script');
   const [searchTerm, setSearchTerm] = useState('');
+  const files: CaseFile[] = [
+    { id: '1', name: 'Interview Recording 1', type: 'audio', size: '12.5 MB' },
+    { id: '2', name: 'Case Notes', type: 'document', size: '1.2 MB' },
+    { id: '3', name: 'Evidence Photo 1', type: 'image', size: '3.4 MB' }
+  ];
+  const bookmarks: Bookmark[] = [
+    { id: '1', text: 'Important admission at 2:30', timestamp: '2:30', fileId: '1' },
+    { id: '2', text: 'Key detail about location', timestamp: '5:45', fileId: '1' },
+    { id: '3', text: 'Reference to earlier case', timestamp: '8:15', fileId: '1' }
+  ];
 
   const filteredFiles = files.filter(file =>
     file.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -38,6 +36,16 @@ export default function CaseFilesBox({
   const filteredBookmarks = bookmarks.filter(bookmark =>
     bookmark.text.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleFileSelect = (file: CaseFile) => {
+    console.log('Selected file:', file);
+    // Handle file selection logic here
+  };
+
+  const handleBookmarkSelect = (bookmark: Bookmark) => {
+    console.log('Selected bookmark:', bookmark);
+    // Handle bookmark selection logic here
+  };
 
   return (
     <div className="flex flex-col h-full bg-[#2f3136] rounded-lg overflow-hidden">
@@ -119,7 +127,7 @@ export default function CaseFilesBox({
               {filteredFiles.map((file) => (
                 <button
                   key={file.id}
-                  onClick={() => onFileSelect(file)}
+                  onClick={() => handleFileSelect(file)}
                   className="w-full p-3 bg-[#36393e] rounded-md hover:bg-[#40444b] transition-colors flex items-center space-x-3"
                 >
                   <svg className="w-5 h-5 text-[#b9bbbe]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,7 +150,7 @@ export default function CaseFilesBox({
               {filteredBookmarks.map((bookmark) => (
                 <button
                   key={bookmark.id}
-                  onClick={() => onBookmarkSelect(bookmark)}
+                  onClick={() => handleBookmarkSelect(bookmark)}
                   className="w-full p-3 bg-[#36393e] rounded-md hover:bg-[#40444b] transition-colors text-left"
                 >
                   <div className="flex items-center justify-between mb-1">

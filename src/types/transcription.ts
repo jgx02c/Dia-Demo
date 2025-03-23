@@ -9,11 +9,7 @@ export interface AudioFile {
 
 export interface Bookmark {
   id: string;
-  fileId: string;
   text: string;
   timestamp: string;
-}
-
-export interface TranscriptionChatMessage {
-  message: string;
+  fileId: string;
 } 
